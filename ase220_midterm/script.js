@@ -1,14 +1,17 @@
 $(document).ready(function () {
   var blobId = "1214024748861612032";
   var blobUrl = `https://jsonblob.com/api/jsonBlob/${blobId}`;
+  var pageSize = 2;
+  var currentPage = 1;
 
-  // fetch api
   function fetchItems() {
+    var startIndex = (currentPage - 1) * pageSize;
+    var endIndex = startIndex + pageSize;
     $.ajax({
       url: blobUrl,
       method: "GET",
       success: function (response) {
-        renderItems(response);
+        renderItems(response.slice(startIndex, endIndex));
       },
       error: function (xhr, status, error) {
         console.error("Error fetching items:", error);
@@ -16,7 +19,7 @@ $(document).ready(function () {
     });
   }
 
-  // Function to render items on the page
+  // items on the page
   function renderItems(items) {
     var itemsList = $("#items-list");
     itemsList.empty();
@@ -28,37 +31,37 @@ $(document).ready(function () {
         ? item.mainImageUrl
         : "https://via.placeholder.com/500x500";
       var itemCard = `
-            <div class="item-card" id="${item.id}">
-              <div class="item-card-header">
-                <img class="profile-picture" src="${profileImageUrl}" alt="Profile Picture">
-                <div class="user-info">
-                  <strong>${item.name ? item.name : "Unknown"}</strong>
-                  <p>${item.email ? item.email : "email@nku.edu"} | ${
-        item.location ? item.location : ""
+                <div class="item-card" id="${item.id}">
+                  <div class="item-card-header">
+                    <img class="profile-picture" src="${profileImageUrl}" alt="Profile Picture">
+                    <div class="user-info">
+                      <strong>${item.name ? item.name : "Unknown"}</strong>
+                      <p>${item.email ? item.email : "No Email"} | ${
+        item.location ? item.location : "No Location"
       }</p>
-                </div>
-              </div>
-              <div class="item-card-body">
-                <img class="item-image" src="${mainImageUrl}" alt="Item Image">
-                <div class="comments"> Comment:
-                  ${renderComments(item.comments)}
-                </div>
-                <input type="text" class="form-control comment-input" placeholder="Add a comment...">
-              </div>
-              <div class="item-actions">
-                <i class="fas fa-heart heart-icon"></i>
-                <div class="ml-auto">
-                  <button class="btn btn-primary btn-comment">Comment</button>
-                  <button class="btn btn-danger btn-delete">Delete</button>
-                </div>
-              </div>
-
-            </div>`;
+                    </div>
+                  </div>
+                  <div class="item-card-body">
+                    <img class="item-image" src="${mainImageUrl}" alt="Item Image">
+                    <div class="comments">
+                      ${renderComments(item.comments)}
+                    </div>
+                    <input type="text" class="form-control comment-input" placeholder="Add a comment...">
+                  </div>
+                  <div class="item-actions">
+                    <i class="fas fa-heart heart-icon"></i>
+                    <div class="ml-auto">
+                      <button class="btn btn-primary btn-comment">Comment</button>
+                      <button class="btn btn-danger btn-delete">Delete</button>
+                      <button class="btn btn-info btn-edit">Edit</button>
+                    </div>
+                  </div>
+                </div>`;
       itemsList.append(itemCard);
     });
   }
 
-  // Comments
+  // comments
   function renderComments(comments) {
     var html = "";
     comments.forEach(function (comment) {
@@ -69,7 +72,7 @@ $(document).ready(function () {
 
   fetchItems();
 
-  // Event listener for submission
+  // form submission
   $("#create-form").submit(function (event) {
     event.preventDefault();
     var itemName = $("#name").val();
@@ -78,7 +81,7 @@ $(document).ready(function () {
     var itemEmail = $("#email").val();
     var itemLocation = $("#location").val();
     var newItem = {
-      id: Date.now(), // Generate ID
+      id: Date.now(), // Generate id
       name: itemName,
       profileImageUrl: itemProfileImage,
       mainImageUrl: itemMainImage,
@@ -113,7 +116,21 @@ $(document).ready(function () {
     });
   });
 
-  // Event listener for comment added
+  //  previous page
+  $("#prev-page").click(function () {
+    if (currentPage > 1) {
+      currentPage--;
+      fetchItems();
+    }
+  });
+
+  //  next page
+  $("#next-page").click(function () {
+    currentPage++;
+    fetchItems();
+  });
+
+  //  comment added
   $(document).on("click", ".btn-comment", function () {
     var itemId = $(this).closest(".item-card").attr("id");
     var commentInput = $(this).closest(".item-card").find(".comment-input");
@@ -150,13 +167,11 @@ $(document).ready(function () {
     }
     commentInput.val("");
   });
-
-  // Event listener for liking a post
+  // liking a post
   $(document).on("click", ".heart-icon", function () {
     $(this).toggleClass("clicked");
   });
-
-  // Event listener for deleting a post
+  //  deleting a post
   $(document).on("click", ".btn-delete", function () {
     var itemId = $(this).closest(".item-card").attr("id");
     $.ajax({
@@ -185,5 +200,41 @@ $(document).ready(function () {
         console.error("Error fetching items:", error);
       },
     });
+  });
+
+  // editing a post
+  $(document).on("click", ".btn-edit", function () {
+    var itemId = $(this).closest(".item-card").attr("id");
+    var newName = prompt("Enter new name:");
+    if (newName) {
+      $.ajax({
+        url: blobUrl,
+        method: "GET",
+        success: function (response) {
+          var items = response || [];
+          items.forEach(function (item) {
+            if (item.id.toString() === itemId) {
+              item.name = newName;
+            }
+          });
+          $.ajax({
+            url: blobUrl,
+            method: "PUT",
+            contentType: "application/json",
+            data: JSON.stringify(items),
+            success: function (response) {
+              console.log("Item edited successfully:", response);
+              fetchItems();
+            },
+            error: function (xhr, status, error) {
+              console.error("Error updating items:", error);
+            },
+          });
+        },
+        error: function (xhr, status, error) {
+          console.error("Error fetching items:", error);
+        },
+      });
+    }
   });
 });

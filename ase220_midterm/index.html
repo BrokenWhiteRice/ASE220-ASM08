@@ -5,19 +5,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>JSONBlob Example</title>
-
     <!-- Bootstrap -->
     <link
       rel="stylesheet"
       href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
     />
-
+    <!-- Font Awesome -->
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
     />
-
-    <!-- added CSS -->
     <style>
       body {
         background-color: #f8f9fa;
@@ -101,6 +98,8 @@
         margin-bottom: 5px;
       }
 
+      /* Pink heart icon */
+
       .heart-icon:hover {
         cursor: pointer;
       }
@@ -108,14 +107,18 @@
       .heart-icon.clicked {
         color: hotpink;
       }
+
+      .pagination-container {
+        margin-bottom: 20px;
+        text-align: center;
+      }
     </style>
   </head>
-  <!-- Body starts here -->
   <body>
     <div class="container">
       <h1 class="text-center mb-4">Mini social media</h1>
 
-      <!--  Form -->
+      <!-- Form -->
       <form id="create-form">
         <div class="form-group">
           <input
@@ -159,6 +162,12 @@
         </div>
         <button type="submit" class="btn btn-primary">Create</button>
       </form>
+      <hr />
+      <!-- Pagination -->
+      <div class="pagination-container">
+        <button id="prev-page" class="btn btn-primary">Previous</button>
+        <button id="next-page" class="btn btn-primary">Next</button>
+      </div>
 
       <!-- Items List -->
       <div id="items-list" class="mt-4"></div>
